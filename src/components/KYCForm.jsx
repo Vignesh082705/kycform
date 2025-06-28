@@ -3,6 +3,8 @@ import html2pdf from 'html2pdf.js';
 
 const KYCForm = () => {
   const formRef = useRef();
+  const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
   const [logo, setLogo] = useState(null);
   const [checkboxAnswers, setCheckboxAnswers] = useState({
     q1: "",
@@ -139,7 +141,12 @@ const KYCForm = () => {
                 <td style={cellStyle}>ID Issue Date</td>
                 <td style={cellStyle}><input type="date" name="issueDate" style={inputStyle} /></td>
                 <td style={cellStyle}>ID Expiry Date</td>
-                <td style={cellStyle}><input type="date" name="expiryDate" style={inputStyle} /></td>
+                <td style={cellStyle}><input
+  type="date"
+  name="expiryDate"
+  style={inputStyle}
+  min={tomorrow.toISOString().split("T")[0]}
+/></td>
               </tr>
               <tr>
   <td style={cellStyle}>Place of Issue</td>
