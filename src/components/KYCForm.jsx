@@ -38,15 +38,15 @@ const KYCForm = () => {
     const opt = {
       margin: 0,
       filename: 'KYC_Form.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 , useCORS: true },
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: { scale: 3 , useCORS: true },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(element).save();
   };
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div >
       <div style={{ marginBottom: '16px', textAlign: 'center' }}>
         <button
           onClick={handleDownloadPDF}
@@ -90,7 +90,7 @@ const KYCForm = () => {
 
         {/* Sections */}
         <Section title="CUSTOMER INFORMATION">
-          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid black' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid black',marginBottom: '24px'}}>
             <tbody>
               {[
                 ["UID No (for our Office Use)", "uid"],
@@ -109,11 +109,16 @@ const KYCForm = () => {
                 <tr key={name}>
                   <td style={{ padding: '8px', border: '1px solid black', fontWeight: '500', textAlign: 'left', verticalAlign: 'top', width: '50%' }}>{label}</td>
                   <td style={{ padding: '8px', border: '1px solid black', textAlign: 'left', verticalAlign: 'top', width: '50%' }}>
-                    <input
-                      type="text"
-                      name={name}
-                      style={{ width: '100%', padding: '4px', fontSize: '14px', outline: 'none', border: 'none' }}
-                    />
+                  <input
+  type={name === 'dob' ? 'date' : 'text'}
+  name={name}
+  style={{
+    width: '100%',
+    fontSize: '14px',
+    minHeight: "15px",
+    lineHeight: '2',  // Make border visible in PDF
+  }}
+/>
                   </td>
                 </tr>
               ))}
@@ -137,16 +142,26 @@ const KYCForm = () => {
                 <td style={cellStyle}><input type="date" name="expiryDate" style={inputStyle} /></td>
               </tr>
               <tr>
-                <td style={cellStyle}>Place of Issue</td>
-                <td style={cellStyle}><textarea name="issuePlace" rows="2" style={inputStyle} /></td>
-                <td style={cellStyle}>ID Issuing Authority</td>
-                <td style={cellStyle}><textarea name="idAuthority" rows="2" style={inputStyle} /></td>
-              </tr>
+  <td style={cellStyle}>Place of Issue</td>
+  <td style={cellStyle}>
+    <div style={{ display: 'flex', flexDirection: 'column',width:'100%' }}>
+      <input maxLength={13} type="text" name="issuePlace1" style={inputStyle} />
+      <input maxLength={13} type="text" name="issuePlace2" style={inputStyle} />
+    </div>
+  </td>
+  <td style={cellStyle}>ID Issuing Authority</td>
+  <td style={cellStyle}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px',width:'95%' }}>
+      <input maxLength={13} type="text" name="idAuthority1" style={inputStyle} />
+      <input maxLength={13} type="text" name="idAuthority2" style={inputStyle} />
+    </div>
+  </td>
+</tr>
             </tbody>
           </table>
         </Section>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px',marginTop:'150px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px',marginTop:'180px' }}>
           <img src={logo} alt="Uploaded Logo" style={{ height: '80px', objectFit: 'contain' }} />
         </div>
         <Section title="AML/CFT -KYC QUESTIONNAIRE">
@@ -168,7 +183,9 @@ const KYCForm = () => {
                       <input
                         type="text"
                         name="q2_text"
-                        style={{ width: '75%', marginTop: '4px', borderBottom: '1px dotted black', padding: '4px', fontSize: '14px' }}
+                        style={{ width: '70%', marginTop: '4px', borderBottom: '1px dotted black', padding: '4px', fontSize: '14px',
+                          minHeight: "15px",
+                          lineHeight: '2', }}
                       />
                     </>
                   ),
@@ -194,11 +211,13 @@ const KYCForm = () => {
                   question: (
                     <>
                       Is the customer involving or controlling any trust or charities?<br />
-                      If yes, please specify:<br />
+                      If yes, please specify:
                       <input
                         type="text"
                         name="q5_text"
-                        style={{ width: '75%', marginTop: '4px', borderBottom: '1px dotted black', padding: '4px', fontSize: '14px' }}
+                        style={{ width: '70%', marginTop: '4px', borderBottom: '1px dotted black', padding: '4px', fontSize: '14px',
+                          minHeight: "15px",
+                          lineHeight: '2', }}
                       />
                     </>
                   ),
@@ -213,7 +232,7 @@ const KYCForm = () => {
                       type="text"
                       name="sourceOfWealth"
                       defaultValue="Personal Savings"
-                      style={{ width: '100%', padding: '6px', fontSize: '14px', border: 'none' }}
+                      style={{ width: '60%', padding: '6px', fontSize: '14px', border: 'none' }}
                     />
                   )
                 }
@@ -222,145 +241,213 @@ const KYCForm = () => {
                   <td style={{ ...cellStyle, width: '5%', fontWeight: '500' }}>{label}</td>
                   <td style={{ ...cellStyle, width: '65%' }}>{question}</td>
                   <td style={{ ...cellStyle, width: '30%' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {["Yes", "No", "N/A"].map((opt, i) => (
-                        <label key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <input
-                            type="checkbox"
-                            name={name}
-                            value={opt.toLowerCase()}
-                            checked={checkboxAnswers[name] === opt.toLowerCase()}
-                            onChange={() =>
-                              setCheckboxAnswers((prev) => ({
-                                ...prev,
-                                [name]: opt.toLowerCase(),
-                              }))
-                            }
-                            style={{ width: '16px', height: '16px' }}
-                          />
-                          {opt}
-                        </label>
-                      ))}
-                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+  {["Yes", "No", "N/A"].map((opt, i) => (
+    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <input
+        type="checkbox"
+        name={name}
+        value={opt.toLowerCase()}
+        checked={checkboxAnswers[name] === opt.toLowerCase()}
+        onChange={() =>
+          setCheckboxAnswers((prev) => ({
+            ...prev,
+            [name]: opt.toLowerCase(),
+          }))
+        }
+        style={{ width: '16px', height: '16px' }}
+      />
+      <label style={{marginBottom:'10px'}}>{opt}</label>
+    </div>
+  ))}
+</div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </Section>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px',marginTop:'300px' }}>
+          <img src={logo} alt="Uploaded Logo" style={{ height: '80px', objectFit: 'contain' }} />
+        </div>
         <Section customTitle={
-  <div style={{ border: '1px solid black', padding: '0', fontSize: '13px' }}>
-    
+  <div style={{ border: '1px solid black',fontSize: '13px'}}>
+
     {/* FOR OFFICE USE ONLY Header */}
     <h3 style={{
-      backgroundColor: '#ffff00',
+      backgroundColor: '#fde047',
       fontWeight: 'bold',
       padding: '8px',
       fontSize: '14px',
-      borderBottom: '1px solid black'
+      borderBottom: '1px solid black',
+      textAlign: 'center',
     }}>
       FOR OFFICE USE ONLY
     </h3>
 
     {/* Compliance Section */}
-    <div style={{ padding: '16px' }}>
+    <div style={{ padding: '16px', paddingBottom:'0px' }}>
       <p>Compliance Department Remarks</p>
-      <div style={{ borderBottom: '1px solid black', height: '20px', marginTop: '4px' }}></div>
-      <div style={{ borderBottom: '1px solid black', height: '20px', marginTop: '4px', marginBottom: '20px' }}></div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '10px' }}>
+  <input
+    type="text"
+    style={{
+      border: 'none',
+      borderBottom: '1px solid black',
+      width: '100%',
+      lineHeight:'2',
+      fontSize: '14px',
+      color: '#0b2546',
+    }}
+  />
+  <input
+    type="text"
+    style={{
+      border: 'none',
+      borderBottom: '1px solid black',
+      width: '100%',
+      lineHeight:'2',
+      fontSize: '14px',
+      color: '#0b2546',
+    }}
+  />
+  <input
+    type="text"
+    style={{
+      border: 'none',
+      borderBottom: '1px solid black',
+      width: '100%',
+      lineHeight:'2',
+      fontSize: '14px',
+      color: '#0b2546',
+    }}
+  />
+</div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-        <span>Approved:</span>
-        <label><input type="checkbox" style={boxStyle} /> Yes</label>
-        <label><input type="checkbox" style={boxStyle} /> No</label>
+        <span style={{marginTop:'4px'}}  >Approved:</span>
+        <input type="checkbox" style={{...boxStyle,marginTop:'10px'}} />
+        <label> Yes</label>
+        <input type="checkbox" style={{...boxStyle,marginTop:'10px'}} /> 
+        <label>No</label>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <span>Compliance Officer Name:</span>
-        <span>Signature:</span>
+        <div style={{ width: '48%' }}>
+          <span>Compliance Officer Name:</span>
+          <input type="text" style={{ border: 'none', borderBottom: '1px solid black', width: '80%', color: '#0b2546',marginTop:'10px',lineHeight:'2', }} />
+        </div>
+        <div style={{ width: '48%' }}>
+          <span>Signature:</span>
+          <input type="text" style={{ border: 'none', borderBottom: '1px solid black', width: '84%', color: '#0b2546',marginTop:'10px' ,lineHeight:'2',}} />
+        </div>
       </div>
     </div>
 
     {/* Senior Management Approval Section */}
     <div style={{ borderTop: '1px solid black', padding: '16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'left', gap: '12px', marginBottom: '10px' }}>
         <strong>SENIOR MANAGEMENT APPROVAL STATUS:</strong>
-        <label><input type="checkbox" style={boxStyle} /> Yes</label>
-        <label><input type="checkbox" style={boxStyle} /> No</label>
+        <input type="checkbox" style={{...boxStyle,marginTop:'8px'}} />
+        <label> Yes</label>
+        <input type="checkbox" style={{...boxStyle,marginTop:'8px'}} /> 
+        <label>No</label>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <div>Name:</div>
-        <div>Signature:</div>
-        <div>Designation:</div>
-        <div>Stamp:</div>
-        <div>Date:</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+        <div>
+          Name:
+          <input type="text" style={{ border: 'none',  width: '80%', color: '#0b2546',lineHeight:'2',paddingLeft:'8px'}} />
+        </div>
+        <div>
+          Signature:
+          <input type="text" style={{ border: 'none',  width: '80%', color: '#0b2546',lineHeight:'2',paddingLeft:'8px' }} />
+        </div>
+        <div>
+          Designation:
+          <input type="text" style={{ border: 'none',  width: '71%', color: '#0b2546',lineHeight:'2',paddingLeft:'8px' }} />
+        </div>
+        <div>
+          Stamp:
+          <input type="text" style={{ border: 'none',  width: '86%', color: '#0b2546',lineHeight:'2',paddingLeft:'8px' }} />
+        </div>
+        <div>
+          Date:
+          <input type="text" style={{ border: 'none', width: '84%',color: '#0b2546',lineHeight:'2',paddingLeft:'8px' }} />
+        </div>
       </div>
     </div>
   </div>
 } />
+
 <Section customTitle={
   <h3 style={{
     fontWeight: 'bold',
     fontSize: '14px',
     marginBottom: '16px',
     textDecoration: 'underline',
-    padding: '8px'
+    textUnderlineOffset: '6px',
   }}>DECLARATIONS
   </h3>}>
-  <div style={{ padding: '8px', fontSize: '13px', lineHeight: '1.6' }}>
-    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: '8px' }}>Source of Fund Declaration</h4>
-    <p>
+  <div style={{marginBottom:'20px'}}>
+  <div style={{ padding: '8px', fontSize: '13px', lineHeight: '1.6' ,textAlign:'justify'}}>
+    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline',textUnderlineOffset: '6px', marginBottom: '8px' }}>Source of Fund Declaration</h4>
+    <p style={{paddingBottom:'18px'}}>
       I acknowledge and understand that in order to register with <strong>Bait Al Safa Gold & Diamonds L.L.C</strong>, 
       I am required to declare the source of funds that will be used for the stated purpose in this application. 
       I am aware of the legal requirements outlined in the federal decree-law No. (20) of 2018 on Anti-Money Laundering and 
       Combating the Financing of Terrorism and Financing of Illegal Organizations, as well as the Cabinet Decision No. (10) of 2019, 
       which specifies the implementing regulations for the aforementioned decree-law.
     </p>
-    <p>
+    <p style={{paddingBottom:'18px'}}>
       I hereby confirm that the funds or metals I possess have been acquired from legitimate sources, 
       and I can provide evidence to support this if required or as requested. Furthermore, I affirm that these funds or metals 
       do not originate from any sanctioned country, entity, or person as identified by the United Nations or any other relevant 
       sanction programs.
     </p>
-    <p>
+    <p style={{paddingBottom:'18px'}}>
       I assure that I am fully compliant with both domestic and international laws, rules, and regulations, 
       including those pertaining to the illicit trade in precious metals and the United Nations Security Council (UNSC) sanctions. 
       Additionally, I guarantee that the sources of the precious metals I possess are free from any involvement in conflict financing, 
       criminal funding, the worst forms of child labor, and human rights abuses.
     </p>
 
-    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline', marginTop: '24px', marginBottom: '8px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',marginTop:'150px' }}>
+      <img src={logo} alt="Uploaded Logo" style={{ height: '80px', objectFit: 'contain' }} />
+    </div>
+
+    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline',textUnderlineOffset: '6px', marginBottom: '8px', marginTop:'30px'}}>
       Politically Exposed Person (PEP) Declaration
     </h4>
-    <p>
+    <p style={{paddingBottom:'18px'}}>
       I am writing to you in my capacity as valued customers of <strong>Bait Al Safa Gold & Diamonds L.L.C</strong>. 
       As part of your robust anti-money laundering (AML) and know your customer (KYC) procedures, I understand that it is necessary 
       for us to provide a declaration regarding our status as Politically Exposed Persons (PEPs).
     </p>
-    <p>
+    <p style={{paddingBottom:'18px'}}>
       I hereby confirm that, to the best of our knowledge and belief, I am not considered Politically Exposed Persons as 
       defined by the applicable laws and regulations. I, as individuals, have not held any prominent public positions, such as 
       government officials, heads of state, or senior members of political parties, either in our home country or in any other jurisdiction.
     </p>
-    <p>
+    <p style={{paddingBottom:'18px'}}>
       I further declare that I do not have any immediate family members or close associates who fall under the category 
       of Politically Exposed Persons.
     </p>
-    <p>
+    <p style={{paddingBottom:'18px'}}>
       I understand the importance of maintaining high standards of integrity and transparency in financial transactions, 
       and I assure you that all funds and activities conducted through <strong>Bait Al Safa Gold & Diamonds L.L.C</strong> 
       will be in full compliance with all applicable laws and regulations.
     </p>
 
-    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline', marginTop: '24px', marginBottom: '8px' }}>
+    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline',textUnderlineOffset: '6px', marginBottom: '8px' }}>
       Sanction Declaration
     </h4>
-    <p>
+    <p style={{paddingBottom:'18px'}}>
       I affirm that I refrain from engaging in transactions with countries subject to sanctions by the Financial Action Task Force (FATF) 
       and the Office of Foreign Assets Control (OFAC). I am committed to conducting all my business operations without prior involvement 
       or future dealings with countries listed on a Sanctions List or located in a Sanctioned Country.
     </p>
-    <p>
+    <p style={{paddingBottom:'18px'}}>
       I am dedicated to ensuring that my activities uphold compliance with economic or financial sanctions and trade regulations imposed 
       by the authorities, including but not limited to the United Arab Emirates (UAE), United States (US), European Union (EU), 
       United Kingdom (UK), and other relevant jurisdictions. I affirm that my understanding of these regulations is in line with 
@@ -369,8 +456,10 @@ const KYCForm = () => {
     </p>
     <p><strong>I hereby declare the above information to be true and accurate to the best of our knowledge.</strong></p>
   </div>
+  </div>
 </Section>
-<Section customTitle={
+<Section
+ customTitle={
   <h3 style={{
     backgroundColor: '#fde047',
     color: '#000',
@@ -388,6 +477,37 @@ const KYCForm = () => {
       {[
         ["a.", "Passport copy", "passport"],
         ["b.", "Valid Visa copy", "visa"],
+      ].map(([label, question, key], idx) => (
+        <tr key={idx}>
+          <td style={{ ...cellStyle, width: '5%', fontWeight: '500' }}>{label}</td>
+          <td style={{ ...cellStyle, width: '65%' }}>{question}</td>
+          <td style={{ ...cellStyle, width: '30%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {["Yes", "No", "N/A"].map((opt, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input
+                    type="checkbox"
+                    checked={documentChecks[key] === opt}
+                    onChange={() => handleDocCheck(key, opt)}
+                    style={{ width: '16px', height: '16px' }}
+                  />
+      <label style={{marginBottom:'10px'}}>{opt}</label>
+    </div>
+              ))}
+            </div>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</Section>
+<div style={{marginTop:'100px',marginBottom:'315px'}}>
+<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',marginBottom:'40px' }}>
+      <img src={logo} alt="Uploaded Logo" style={{ height: '80px', objectFit: 'contain' }} />
+    </div>
+  <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', border: '1px solid black', fontSize: '14px' }}>
+    <tbody>
+      {[
         ["c.", "Emirates ID copy", "emiratesId"],
         ["d.", "UAE National ID copy", "uaeId"],
         ["e.", "Tenancy Contract/Utility Bill copy", "tenancy"],
@@ -397,17 +517,17 @@ const KYCForm = () => {
           <td style={{ ...cellStyle, width: '5%', fontWeight: '500' }}>{label}</td>
           <td style={{ ...cellStyle, width: '65%' }}>{question}</td>
           <td style={{ ...cellStyle, width: '30%' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
               {["Yes", "No", "N/A"].map((opt, i) => (
-                <label key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <input
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input
                     type="checkbox"
                     checked={documentChecks[key] === opt}
                     onChange={() => handleDocCheck(key, opt)}
-                    style={{ width: '16px', height: '16px' }}
+                    style={{ width: '16px', height: '16px',color:'black' }}
                   />
-                  {opt}
-                </label>
+      <label style={{marginBottom:'10px'}}>{opt}</label>
+    </div>
               ))}
             </div>
           </td>
@@ -424,14 +544,14 @@ const KYCForm = () => {
       </React.Fragment>
     ))}
   </div>
-</Section>
+</div>
       </div>
     </div>
   );
 };
 
 const Section = ({ title, children, customTitle }) => (
-  <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+  <div style={{ textAlign: 'center' }}>
     {customTitle ? customTitle : (
       <h3 style={{
         backgroundColor: '#fde047',
@@ -461,8 +581,9 @@ const boxStyle = {
 
 const inputStyle = {
   width: '100%',
-  padding: '4px',
   fontSize: '14px',
+  minHeight: "15px",
+  lineHeight: '2',
   outline: 'none',
   border: 'none'
 };
