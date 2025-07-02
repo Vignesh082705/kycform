@@ -35,17 +35,78 @@ tomorrow.setDate(tomorrow.getDate() + 1);
     }
   };
 
-  const handleDownloadPDF = () => {
-    const element = formRef.current;
-    const opt = {
-      margin: 0,
-      filename: 'KYC_Form.pdf',
-      image: { type: 'jpeg', quality: 1 },
-      html2canvas: { scale: 3 , useCORS: true },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(element).save();
+  const Page = ({ children }) => (
+  <div
+    style={{
+      width: '100%',
+      minHeight: '1050px', // A4 height in px
+      border: '1px solid black',
+      marginTop:'10px',
+      marginBottom:'20px',
+      padding: '30px',
+      boxSizing: 'border-box',
+      pageBreakAfter: 'always',
+    }}
+  >
+    {children}
+  </div>
+);
+const handleDownloadPDF = () => {
+  const element = formRef.current;
+
+  // A4 height roughly = 1123px per page
+  const pageCountEstimate = Math.ceil(element.scrollHeight / 1123);
+  const watermarkContainer = document.createElement('div');
+  watermarkContainer.style.position = 'absolute';
+  watermarkContainer.style.top = '0';
+  watermarkContainer.style.left = '0';
+  watermarkContainer.style.width = '100%';
+  watermarkContainer.style.height = '100%';
+  watermarkContainer.style.zIndex = '9999';
+  watermarkContainer.style.pointerEvents = 'none';
+
+  for (let i = 0; i < pageCountEstimate; i++) {
+    const wm = document.createElement('div');
+    wm.innerText = 'KYC FORM';
+    Object.assign(wm.style, {
+      position: 'absolute',
+      top: `${i * 1123 + 500}px`, // place in center of each page
+      left: '50%',
+      transform: 'translate(-50%, -50%) rotate(-45deg)',
+      fontSize: '60px',
+      color: 'rgba(150, 150, 150, 0.2)',
+      whiteSpace: 'nowrap',
+    });
+    watermarkContainer.appendChild(wm);
+  }
+
+  element.appendChild(watermarkContainer);
+
+  const opt = {
+    margin: 0,
+    filename: 'KYC_Form.pdf',
+    image: { type: 'jpeg', quality: 1 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
   };
+
+  html2pdf()
+    .set(opt)
+    .from(element)
+    .toPdf()
+    .get('pdf')
+    .then(function (pdf) {
+      const totalPages = pdf.internal.getNumberOfPages();
+      if (totalPages === 6) {
+        pdf.deletePage(totalPages);
+      }
+      pdf.save('KYC_Form.pdf');
+
+      // Remove watermark after saving
+      element.removeChild(watermarkContainer);
+    });
+};
+
 
   return (
     <div >
@@ -67,7 +128,9 @@ tomorrow.setDate(tomorrow.getDate() + 1);
     margin: '0 auto',
     backgroundColor: '#fff',
     padding: '40px',
-    border: '1px solid #d1d5db',
+    overflow:'hidden',
+    paddingBottom:'0px',
+    paddingTop:'25px',
     fontFamily: 'Arial, sans-serif',
     fontSize: '14px',
     position: 'relative',
@@ -75,6 +138,7 @@ tomorrow.setDate(tomorrow.getDate() + 1);
     color: '#1e3a8a'
   }}
 >
+    <Page>
         {/* Logo Upload */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
           {logo ? (
@@ -167,8 +231,9 @@ tomorrow.setDate(tomorrow.getDate() + 1);
             </tbody>
           </table>
         </Section>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px',marginTop:'180px' }}>
+        </Page>
+        <Page>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px'}}>
           <img src={logo} alt="Uploaded Logo" style={{ height: '80px', objectFit: 'contain' }} />
         </div>
         <Section title="AML/CFT -KYC QUESTIONNAIRE">
@@ -274,7 +339,9 @@ tomorrow.setDate(tomorrow.getDate() + 1);
             </tbody>
           </table>
         </Section>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px',marginTop:'300px' }}>
+        </Page>
+        <Page>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px'}}>
           <img src={logo} alt="Uploaded Logo" style={{ height: '80px', objectFit: 'contain' }} />
         </div>
         <Section customTitle={
@@ -393,12 +460,12 @@ tomorrow.setDate(tomorrow.getDate() + 1);
     fontSize: '14px',
     marginBottom: '16px',
     textDecoration: 'underline',
-    textUnderlineOffset: '6px',
+    textUnderlineOffset: '10px',
   }}>DECLARATIONS
   </h3>}>
   <div style={{marginBottom:'20px'}}>
   <div style={{ padding: '8px', fontSize: '13px', lineHeight: '1.6' ,textAlign:'justify'}}>
-    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline',textUnderlineOffset: '6px', marginBottom: '8px' }}>Source of Fund Declaration</h4>
+    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline',textUnderlineOffset: '10px', marginBottom: '8px' }}>Source of Fund Declaration</h4>
     <p style={{paddingBottom:'18px'}}>
       I acknowledge and understand that in order to register with <strong>Bait Al Safa Gold & Diamonds L.L.C</strong>, 
       I am required to declare the source of funds that will be used for the stated purpose in this application. 
@@ -418,12 +485,17 @@ tomorrow.setDate(tomorrow.getDate() + 1);
       Additionally, I guarantee that the sources of the precious metals I possess are free from any involvement in conflict financing, 
       criminal funding, the worst forms of child labor, and human rights abuses.
     </p>
-
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',marginTop:'150px' }}>
+    </div>
+    </div>
+    </Section>
+    </Page>
+    <Page>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <img src={logo} alt="Uploaded Logo" style={{ height: '80px', objectFit: 'contain' }} />
     </div>
-
-    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline',textUnderlineOffset: '6px', marginBottom: '8px', marginTop:'30px'}}>
+    <div>
+    <div style={{ padding: '8px',paddingTop:'0px', fontSize: '13px', lineHeight: '1.6' ,textAlign:'justify'}}>
+    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline',textUnderlineOffset: '10px', marginBottom: '8px', marginTop:'10px'}}>
       Politically Exposed Person (PEP) Declaration
     </h4>
     <p style={{paddingBottom:'18px'}}>
@@ -446,7 +518,7 @@ tomorrow.setDate(tomorrow.getDate() + 1);
       will be in full compliance with all applicable laws and regulations.
     </p>
 
-    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline',textUnderlineOffset: '6px', marginBottom: '8px' }}>
+    <h4 style={{ fontWeight: 'bold', textDecoration: 'underline',textUnderlineOffset: '10px', marginBottom: '8px' }}>
       Sanction Declaration
     </h4>
     <p style={{paddingBottom:'18px'}}>
@@ -464,7 +536,6 @@ tomorrow.setDate(tomorrow.getDate() + 1);
     <p><strong>I hereby declare the above information to be true and accurate to the best of our knowledge.</strong></p>
   </div>
   </div>
-</Section>
 <Section
  customTitle={
   <h3 style={{
@@ -508,8 +579,10 @@ tomorrow.setDate(tomorrow.getDate() + 1);
     </tbody>
   </table>
 </Section>
-<div style={{marginTop:'100px',marginBottom:'315px'}}>
-<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',marginBottom:'40px' }}>
+</Page>
+<Page>
+<div >
+<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <img src={logo} alt="Uploaded Logo" style={{ height: '80px', objectFit: 'contain' }} />
     </div>
   <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', border: '1px solid black', fontSize: '14px' }}>
@@ -552,6 +625,7 @@ tomorrow.setDate(tomorrow.getDate() + 1);
     ))}
   </div>
 </div>
+    </Page>
       </div>
     </div>
   );
